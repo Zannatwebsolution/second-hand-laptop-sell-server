@@ -162,11 +162,31 @@ app.get("/users/:role", async (req, res) => {
   } catch (error) {
     res.send({
       data: error,
-      success: true,
+      success: false,
       message: "Data Load Fail",
     });
   }
 });
+
+// Delete User
+app.delete("/users/:id", verifyJwt, verifyAdmin, async (req, res)=>{
+ try{
+  const id = req.params.id;
+  const filter = {_id: ObjectId(id)}
+  const result = await Users.deleteOne(filter);
+  res.send({
+    data: result,
+    success: true,
+    message: "Successfully delete User",
+  })
+ }catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Delete Fail",
+    });
+  }
+})
 
 // Create Category Data
 app.post("/category", async (req, res) => {
