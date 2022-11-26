@@ -279,6 +279,21 @@ app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res)=>{
     res.send(result)
 })
 
+// Add New field by all product, If You Need Manually
+app.put('/product/', async (req, res) => {
+  const email = req.params.email
+  const filter = {}
+  const options = { upsert: true }
+  const updateDoc = {
+    $set: {
+      years_of_use: 2
+    }
+  }
+  const result = await Products.updateMany(filter, updateDoc, options);
+ 
+
+  res.send({result})
+})
 
 // Create Blog Post Data
 app.post("/blog", async (req, res) => {
