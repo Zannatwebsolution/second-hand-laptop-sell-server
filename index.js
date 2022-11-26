@@ -20,6 +20,7 @@ const Users = client.db("secondHandLaptop").collection("users");
 const Category = client.db("secondHandLaptop").collection("categories");
 const Products = client.db("secondHandLaptop").collection("products");
 const Order = client.db("secondHandLaptop").collection("order");
+const Blogs = client.db("secondHandLaptop").collection("blogs");
 
 async function run() {
   try {
@@ -146,6 +147,27 @@ app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
   }
 });
 
+// Filter data by user role 
+app.get("/users/:role", async (req, res) => {
+  try {
+    const query = {};
+    const userRole = req.params.role;
+    const filter = {role: userRole}
+    const result = await Users.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all data",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
 // Create Category Data
 app.post("/category", async (req, res) => {
   try {
@@ -237,6 +259,57 @@ app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res)=>{
     res.send(result)
 })
 
+
+// Create Blog Post Data
+app.post("/blog", async (req, res) => {
+  try {
+    const blog = req.body;
+    const result = await Blogs.insertOne(blog);
+    res.send({
+      data: result,
+      success: true,
+      message: "Blog Created Successful",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Blog Created Fail",
+    });
+  }
+});
+
+// Get All Blogs Data
+app.get("/blog", async (req, res) => {
+  try {
+    const query = {};
+    const result = await Blogs.find(query).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Blogs data",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
+// Find Blog Data By Id
+app.get("/blog/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log(id)
+  const filter = { _id: ObjectId(id) };
+  const result = await Blogs.find(filter).toArray();
+  res.send({
+    data: result,
+    success: true,
+    message: "Successfully Find the blog data",
+  });
+});
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Running SuccessFull Port", process.env.PORT);
