@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
 const Users = client.db("secondHandLaptop").collection("users");
 const Category = client.db("secondHandLaptop").collection("categories");
 const Products = client.db("secondHandLaptop").collection("products");
-const Order = client.db("secondHandLaptop").collection("order");
+const Orders = client.db("secondHandLaptop").collection("orders");
 const Blogs = client.db("secondHandLaptop").collection("blogs");
 
 async function run() {
@@ -39,10 +39,6 @@ async function run() {
         message: "JWT Token Generate Successful",
       });
     });
-
-    
-
-  
 
     // User Admin
     app.put("/users/admin/:id", verifyJwt, verifyAdmin, async (req, res) => {
@@ -64,9 +60,8 @@ async function run() {
       const query = { email };
       const user = await Users.findOne(query);
       const role = user?.role;
-      console.log(role)
       res.send({ role: role });
-    //   res.send({ isAdmin: user?.role === "admin" });
+      //   res.send({ isAdmin: user?.role === "admin" });
     });
   } catch (error) {
     console.log(error.message);
@@ -79,33 +74,32 @@ app.get("/", (req, res) => {
 });
 // Verify JWT Token
 function verifyJwt(req, res, next) {
-    const authHeader = req.headers.authorization;
-    console.log(authHeader)
-    if (!authHeader) {
-      return res.status(401).send({ message: "unauthorized" });
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "unauthorized" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ massage: "unauthorized" });
     }
-    const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).send({ massage: "unauthorized" });
-      }
+    req.decoded = decoded;
+    next();
+  });
+}
 
-      req.decoded = decoded;
-      next();
-    });
+const verifyAdmin = async (req, res, next) => {
+  const decodedEmail = req.decoded.email;
+  const query = { email: decodedEmail };
+  const user = await Users.findOne(query);
+  if (user?.role !== "admin") {
+    return res.status(403).send({ message: "Forbidden Access" });
   }
 
-  const verifyAdmin =async (req, res, next)=>{
-    const decodedEmail = req.decoded.email;
-    const query = {email: decodedEmail};
-    const user = await Users.findOne(query);
-    if(user?.role !== "admin"){
-       return res.status(403).send({message: "Forbidden Access"})
-    }
-
-    next()
-}
+  next();
+};
 // Create User Data
 app.put("/users/:email", async (req, res) => {
   const user = req.body;
@@ -147,12 +141,12 @@ app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
   }
 });
 
-// Filter data by user role 
+// Filter data by user role
 app.get("/users/:role", async (req, res) => {
   try {
     const query = {};
     const userRole = req.params.role;
-    const filter = {role: userRole}
+    const filter = { role: userRole };
     const result = await Users.find(filter).toArray();
     res.send({
       data: result,
@@ -169,24 +163,24 @@ app.get("/users/:role", async (req, res) => {
 });
 
 // Delete User
-app.delete("/users/:id", verifyJwt, verifyAdmin, async (req, res)=>{
- try{
-  const id = req.params.id;
-  const filter = {_id: ObjectId(id)}
-  const result = await Users.deleteOne(filter);
-  res.send({
-    data: result,
-    success: true,
-    message: "Successfully delete User",
-  })
- }catch (error) {
+app.delete("/users/:id", verifyJwt, verifyAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const filter = { _id: ObjectId(id) };
+    const result = await Users.deleteOne(filter);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully delete User",
+    });
+  } catch (error) {
     res.send({
       data: error,
       success: false,
       message: "Data Delete Fail",
     });
   }
-})
+});
 
 // Create Category Data
 app.post("/category", async (req, res) => {
@@ -226,12 +220,12 @@ app.get("/category", async (req, res) => {
   }
 });
 
-app.delete("/category/:id", verifyJwt, verifyAdmin, async (req, res)=>{
-    const id = req.params.id;
-    const filter = {_id: ObjectId(id)}
-    const result = await Category.deleteOne(filter);
-    res.send(result)
-})
+app.delete("/category/:id", verifyJwt, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const result = await Category.deleteOne(filter);
+  res.send(result);
+});
 
 // Create Product Data
 app.post("/products", async (req, res) => {
@@ -271,29 +265,48 @@ app.get("/products", async (req, res) => {
   }
 });
 
-// Delete Product
-app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res)=>{
+// Get Product By Category Id
+app.get("/category/:id", async (req, res) => {
+  try {
     const id = req.params.id;
-    const filter = {_id: ObjectId(id)}
-    const result = await Products.deleteOne(filter);
-    res.send(result)
-})
+    const filter = { id: id };
+    const result = await Products.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Category data",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
+// Delete Product
+app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const result = await Products.deleteOne(filter);
+  res.send(result);
+});
 
 // Add New field by all product, If You Need Manually
-app.put('/product/', async (req, res) => {
-  const email = req.params.email
-  const filter = {}
-  const options = { upsert: true }
+app.put("/product/", async (req, res) => {
+  const filter = { categoryName: "Laptop Batteries" };
+  const options = { upsert: true };
   const updateDoc = {
     $set: {
-      years_of_use: 2
-    }
-  }
+      seller: "Rony Khan",
+    },
+  };
   const result = await Products.updateMany(filter, updateDoc, options);
- 
+  // const result =  Products.updateMany({}, {$rename:{"name":"product_name"}}, false, true)
 
-  res.send({result})
-})
+  res.send({ result });
+});
 
 // Create Blog Post Data
 app.post("/blog", async (req, res) => {
@@ -336,7 +349,6 @@ app.get("/blog", async (req, res) => {
 // Find Blog Data By Id
 app.get("/blog/:id", async (req, res) => {
   const id = req.params.id;
-  console.log(id)
   const filter = { _id: ObjectId(id) };
   const result = await Blogs.find(filter).toArray();
   res.send({
@@ -344,6 +356,26 @@ app.get("/blog/:id", async (req, res) => {
     success: true,
     message: "Successfully Find the blog data",
   });
+});
+
+// Create Order Data
+app.post("/orders", async (req, res) => {
+  try {
+    const order = req.body;
+    console.log(order)
+    const result = await Orders.insertOne(order);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully Place Your Order",
+    });
+  } catch (error) {
+    res.send({
+      data: result,
+      success: false,
+      message: "Order fail",
+    });
+  }
 });
 
 app.listen(process.env.PORT || 5000, () => {
