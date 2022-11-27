@@ -378,6 +378,25 @@ app.post("/orders", async (req, res) => {
   }
 });
 
+// Get All Order Data
+app.get("/orders", async (req, res) => {
+  try {
+    const query = {};
+    const result = await Orders.find(query).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Order data",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Running SuccessFull Port", process.env.PORT);
 });
