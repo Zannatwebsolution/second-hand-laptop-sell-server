@@ -265,6 +265,27 @@ app.get("/products", async (req, res) => {
   }
 });
 
+
+// Get Product By Email
+app.get("/products/:email", async (req, res) => {
+  try {
+    const email = req.params.email;
+    const filter = { email: email };
+    const result = await Products.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Product data By Email",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
 // Get Product By Category Id
 app.get("/category/:id", async (req, res) => {
   try {
@@ -284,6 +305,9 @@ app.get("/category/:id", async (req, res) => {
     });
   }
 });
+
+
+
 
 // Delete Product
 app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res) => {
@@ -391,12 +415,33 @@ app.get("/orders", async (req, res) => {
   } catch (error) {
     res.send({
       data: error,
-      success: true,
+      success: false,
       message: "Data Load Fail",
     });
   }
 });
 
+// Find Order Data By Email
+app.get("/orders/:email", async (req, res) => {
+
+  try{
+    const email = req.params.email;
+  const filter = { email: email };
+  const result = await Orders.find(filter).toArray();
+  res.send({
+    data: result,
+    success: true,
+    message: "Successfully Find the Order data",
+  });
+  }catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Load Fail",
+    });
+  }
+
+});
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Running SuccessFull Port", process.env.PORT);
 });
