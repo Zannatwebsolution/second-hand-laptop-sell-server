@@ -21,6 +21,7 @@ const Category = client.db("secondHandLaptop").collection("categories");
 const Products = client.db("secondHandLaptop").collection("products");
 const Orders = client.db("secondHandLaptop").collection("orders");
 const Blogs = client.db("secondHandLaptop").collection("blogs");
+const Wishlist = client.db("secondHandLaptop").collection("wishlist");
 
 async function run() {
   try {
@@ -319,11 +320,11 @@ app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res) => {
 
 // Add New field by all product, If You Need Manually
 app.put("/product/", async (req, res) => {
-  const filter = { categoryName: "Laptop Batteries" };
+  const filter = { categoryName: "Laptop Stands" };
   const options = { upsert: true };
   const updateDoc = {
     $set: {
-      seller: "Rony Khan",
+      wishlist: "no",
     },
   };
   const result = await Products.updateMany(filter, updateDoc, options);
@@ -432,6 +433,77 @@ app.get("/orders/:email", async (req, res) => {
     data: result,
     success: true,
     message: "Successfully Find the Order data",
+  });
+  }catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Load Fail",
+    });
+  }
+
+});
+
+
+// Create Wishlist Data
+app.put("/wishlist/:id", async (req, res) => {
+  try {
+    const wishlist = req.body;
+    console.log(wishlist)
+    const id = req.params.id;
+    const filter = { _id: ObjectId(id) };
+    const option = { upsert: true };
+    const updateDoc = {
+      $set: {
+        wishlist
+      },
+    };
+    const result = await Wishlist.updateOne(filter, updateDoc, option);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully Added wishlist",
+    });
+  } catch (error) {
+    res.send({
+      data: result,
+      success: false,
+      message: "Wishlist fail",
+    });
+  }
+});
+
+
+// Get All WishList Data
+app.get("/wishlist", async (req, res) => {
+  try {
+    const query = {};
+    const result = await Wishlist.find(query).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all wishlist data",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Load Fail",
+    });
+  }
+});
+
+// Find Wishlist Data By Email
+app.get("/wishlist/:email", async (req, res) => {
+
+  try{
+    const email = req.params.email;
+  const filter = { email: email };
+  const result = await Wishlist.find(filter).toArray();
+  res.send({
+    data: result,
+    success: true,
+    message: `Successfully Find the wishlist data by email ${email}`,
   });
   }catch (error) {
     res.send({
