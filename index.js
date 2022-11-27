@@ -55,6 +55,21 @@ async function run() {
       res.send(result);
     });
 
+// seller verify
+app.put("/users/seller/:id", verifyJwt, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const option = { upsert: true };
+  const updateDoc = {
+    $set: {
+      status: "verified",
+    },
+  };
+  const result = await Users.updateOne(filter, updateDoc, option);
+  res.send(result);
+});
+
+
     // Get Admin
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -439,7 +454,7 @@ app.get("/orders/:email", async (req, res) => {
 });
 
 // Create Wishlist Data
-app.put("/wishlist/:id", async (req, res) => {
+app.put("/wishlist/:id", verifyJwt, async (req, res) => {
   try {
     const wishlist = req.body;
     console.log(wishlist);
@@ -467,7 +482,7 @@ app.put("/wishlist/:id", async (req, res) => {
 });
 
 // Get All WishList Data
-app.get("/wishlist", async (req, res) => {
+app.get("/wishlist", verifyJwt, async (req, res) => {
   try {
     const query = {};
     const result = await Wishlist.find(query).toArray();
@@ -486,7 +501,7 @@ app.get("/wishlist", async (req, res) => {
 });
 
 // Find Wishlist Data By Email
-app.get("/wishlist/:email", async (req, res) => {
+app.get("/wishlist/:email", verifyJwt, async (req, res) => {
   try {
     const email = req.params.email;
     const filter = {wishlistEmail: email};
@@ -506,7 +521,7 @@ app.get("/wishlist/:email", async (req, res) => {
 });
 
 // Delete wishlist product by product name
-app.delete("/wishlist/:name",  async (req, res) => {
+app.delete("/wishlist/:name", verifyJwt, async (req, res) => {
   try {
     const name = req.params.name;
     // Id not working
