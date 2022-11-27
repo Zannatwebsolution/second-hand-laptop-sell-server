@@ -266,7 +266,6 @@ app.get("/products", async (req, res) => {
   }
 });
 
-
 // Get Product By Email
 app.get("/products/:email", async (req, res) => {
   try {
@@ -306,9 +305,6 @@ app.get("/category/:id", async (req, res) => {
     });
   }
 });
-
-
-
 
 // Delete Product
 app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res) => {
@@ -387,7 +383,7 @@ app.get("/blog/:id", async (req, res) => {
 app.post("/orders", async (req, res) => {
   try {
     const order = req.body;
-    console.log(order)
+    console.log(order);
     const result = await Orders.insertOne(order);
     res.send({
       data: result,
@@ -424,39 +420,36 @@ app.get("/orders", async (req, res) => {
 
 // Find Order Data By Email
 app.get("/orders/:email", async (req, res) => {
-
-  try{
+  try {
     const email = req.params.email;
-  const filter = { email: email };
-  const result = await Orders.find(filter).toArray();
-  res.send({
-    data: result,
-    success: true,
-    message: "Successfully Find the Order data",
-  });
-  }catch (error) {
+    const filter = { email: email };
+    const result = await Orders.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully Find the Order data",
+    });
+  } catch (error) {
     res.send({
       data: error,
       success: false,
       message: "Data Load Fail",
     });
   }
-
 });
-
 
 // Create Wishlist Data
 app.put("/wishlist/:id", async (req, res) => {
   try {
     const wishlist = req.body;
-    console.log(wishlist)
+    console.log(wishlist);
     const id = req.params.id;
-    const filter = { _id: ObjectId(id) };
+    const filter = { product_name: id };
+    // const filter = { _id: ObjectId(id) };
+    console.log(filter)
     const option = { upsert: true };
     const updateDoc = {
-      $set: {
-        wishlist
-      },
+      $set: wishlist
     };
     const result = await Wishlist.updateOne(filter, updateDoc, option);
     res.send({
@@ -466,13 +459,12 @@ app.put("/wishlist/:id", async (req, res) => {
     });
   } catch (error) {
     res.send({
-      data: result,
+      data: error,
       success: false,
       message: "Wishlist fail",
     });
   }
 });
-
 
 // Get All WishList Data
 app.get("/wishlist", async (req, res) => {
@@ -495,24 +487,44 @@ app.get("/wishlist", async (req, res) => {
 
 // Find Wishlist Data By Email
 app.get("/wishlist/:email", async (req, res) => {
-
-  try{
+  try {
     const email = req.params.email;
-  const filter = { email: email };
-  const result = await Wishlist.find(filter).toArray();
-  res.send({
-    data: result,
-    success: true,
-    message: `Successfully Find the wishlist data by email ${email}`,
-  });
-  }catch (error) {
+    const filter = {wishlistEmail: email};
+    const result = await Wishlist.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: `Successfully Find the wishlist data by email ${email}`,
+    });
+  } catch (error) {
     res.send({
       data: error,
       success: false,
       message: "Data Load Fail",
     });
   }
+});
 
+// Delete wishlist product by product name
+app.delete("/wishlist/:name",  async (req, res) => {
+  try {
+    const name = req.params.name;
+    // Id not working
+    // const filter = { _id: ObjectId(id) };
+    const filter = { product_name: name };
+    const result = await Wishlist.deleteOne(filter);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully delete User",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Delete Fail",
+    });
+  }
 });
 app.listen(process.env.PORT || 5000, () => {
   console.log("Server Running SuccessFull Port", process.env.PORT);
