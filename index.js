@@ -22,6 +22,7 @@ const Products = client.db("secondHandLaptop").collection("products");
 const Orders = client.db("secondHandLaptop").collection("orders");
 const Blogs = client.db("secondHandLaptop").collection("blogs");
 const Wishlist = client.db("secondHandLaptop").collection("wishlist");
+const ReportedProduct = client.db("secondHandLaptop").collection("reportedProduct");
 
 async function run() {
   try {
@@ -538,6 +539,53 @@ app.delete("/wishlist/:name", verifyJwt, async (req, res) => {
       data: error,
       success: false,
       message: "Data Delete Fail",
+    });
+  }
+});
+
+// Create Reported Data
+app.put("/reportedProduct/:id", verifyJwt, async (req, res) => {
+  try {
+    const wishlist = req.body;
+    console.log(wishlist);
+    const id = req.params.id;
+    const filter = { reportedEmail: id };
+    // const filter = { _id: ObjectId(id) };
+    console.log(filter)
+    const option = { upsert: true };
+    const updateDoc = {
+      $set: wishlist
+    };
+    const result = await ReportedProduct.updateOne(filter, updateDoc, option);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully Added wishlist",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Wishlist fail",
+    });
+  }
+});
+
+// Get All Reported Data
+app.get("/reportedProduct", async (req, res) => {
+  try {
+    const query = {};
+    const result = await ReportedProduct.find(query).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Reported Product",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Load Fail",
     });
   }
 });
