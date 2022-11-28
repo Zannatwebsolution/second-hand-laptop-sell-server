@@ -22,7 +22,9 @@ const Products = client.db("secondHandLaptop").collection("products");
 const Orders = client.db("secondHandLaptop").collection("orders");
 const Blogs = client.db("secondHandLaptop").collection("blogs");
 const Wishlist = client.db("secondHandLaptop").collection("wishlist");
-const ReportedProduct = client.db("secondHandLaptop").collection("reportedProduct");
+const ReportedProduct = client
+  .db("secondHandLaptop")
+  .collection("reportedProduct");
 const Subscribe = client.db("secondHandLaptop").collection("subscribe");
 
 async function run() {
@@ -57,20 +59,19 @@ async function run() {
       res.send(result);
     });
 
-// seller verify
-app.put("/users/seller/:id", verifyJwt, verifyAdmin, async (req, res) => {
-  const id = req.params.id;
-  const filter = { _id: ObjectId(id) };
-  const option = { upsert: true };
-  const updateDoc = {
-    $set: {
-      status: "verified",
-    },
-  };
-  const result = await Users.updateOne(filter, updateDoc, option);
-  res.send(result);
-});
-
+    // seller verify
+    app.put("/users/seller/:id", verifyJwt, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: "verified",
+        },
+      };
+      const result = await Users.updateOne(filter, updateDoc, option);
+      res.send(result);
+    });
 
     // Get Admin
     app.get("/users/admin/:email", async (req, res) => {
@@ -160,7 +161,7 @@ app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
 });
 
 // Filter data by user role
-app.get("/users/:role", async (req, res) => {
+app.get("/users/:role", verifyJwt, verifyAdmin, async (req, res) => {
   try {
     const query = {};
     const userRole = req.params.role;
@@ -201,7 +202,7 @@ app.delete("/users/:id", verifyJwt, verifyAdmin, async (req, res) => {
 });
 
 // Create Category Data
-app.post("/category", async (req, res) => {
+app.post("/category", verifyJwt, verifyAdmin, async (req, res) => {
   try {
     const category = req.body;
     const result = await Category.insertOne(category);
@@ -284,7 +285,7 @@ app.get("/products", async (req, res) => {
 });
 
 // Get Product By Email
-app.get("/products/:email", async (req, res) => {
+app.get("/products/:email", verifyJwt, async (req, res) => {
   try {
     const email = req.params.email;
     const filter = { email: email };
@@ -325,7 +326,7 @@ app.get("/product/:brand", async (req, res) => {
   try {
     const brand = req.params.brand;
     const filter = { brand: brand };
-    console.log(filter)
+    console.log(filter);
     const result = await Products.find(filter).toArray();
     res.send({
       data: result,
@@ -340,7 +341,6 @@ app.get("/product/:brand", async (req, res) => {
     });
   }
 });
-
 
 // Get Product By Category Id
 app.get("/category/:id", async (req, res) => {
@@ -376,13 +376,39 @@ app.put("/product/", async (req, res) => {
   const options = { upsert: true };
   const updateDoc = {
     $set: {
-      brand_title: "D-Link Corporation is a Taiwanese multinational networking equipment manufacturing corporation headquartered in Taipei",
+      brand_title:
+        "D-Link Corporation is a Taiwanese multinational networking equipment manufacturing corporation headquartered in Taipei",
     },
   };
   const result = await Products.updateMany(filter, updateDoc, options);
   // const result =  Products.updateMany({}, {$rename:{"name":"product_name"}}, false, true)
 
   res.send({ result });
+});
+
+app.put("/adver/:title", async (req, res) => {
+  try {
+    const body = req.body;
+    console.log(body);
+    const title = req.params.title;
+    const filter = { _id: ObjectId(title) };
+    const options = { upsert: true };
+    const updateDoc = {
+      $set: {
+        advertise: "yes",
+      },
+    };
+    const result = await Products.updateMany(filter, updateDoc, options);
+    // const result =  Products.updateMany({}, {$rename:{"name":"product_name"}}, false, true)
+
+    res.send({ data: result, success: true, message: "Advertise Successful" });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Blog Created Fail",
+    });
+  }
 });
 
 // Create Blog Post Data
@@ -495,17 +521,18 @@ app.get("/orders/:email", verifyJwt, async (req, res) => {
 });
 
 // Create Wishlist Data
-app.put("/wishlist/:id", verifyJwt, async (req, res) => {
+app.put("/wishlist/:email/", verifyJwt, async (req, res) => {
   try {
     const wishlist = req.body;
-    console.log(wishlist);
-    const id = req.params.id;
-    const filter = { product_name: id };
-    // const filter = { _id: ObjectId(id) };
-    console.log(filter)
+    const email = req.params.email;
+    const filter = {
+      wishlistEmail: email,
+      product_name: wishlist.product_name,
+    };
+    console.log(filter);
     const option = { upsert: true };
     const updateDoc = {
-      $set: wishlist
+      $set: wishlist,
     };
     const result = await Wishlist.updateOne(filter, updateDoc, option);
     res.send({
@@ -545,7 +572,7 @@ app.get("/wishlist", verifyJwt, async (req, res) => {
 app.get("/wishlist/:email", verifyJwt, async (req, res) => {
   try {
     const email = req.params.email;
-    const filter = {wishlistEmail: email};
+    const filter = { wishlistEmail: email };
     const result = await Wishlist.find(filter).toArray();
     res.send({
       data: result,
@@ -591,10 +618,10 @@ app.put("/reportedProduct/:id", verifyJwt, async (req, res) => {
     const id = req.params.id;
     const filter = { reportedEmail: id };
     // const filter = { _id: ObjectId(id) };
-    console.log(filter)
+    console.log(filter);
     const option = { upsert: true };
     const updateDoc = {
-      $set: wishlist
+      $set: wishlist,
     };
     const result = await ReportedProduct.updateOne(filter, updateDoc, option);
     res.send({
@@ -634,14 +661,14 @@ app.get("/reportedProduct", verifyJwt, verifyAdmin, async (req, res) => {
 app.put("/subscribe/:email", async (req, res) => {
   try {
     const emailSubscribe = req.body;
-    console.log(emailSubscribe)
+    console.log(emailSubscribe);
     const email = req.params.email;
     const filter = { email: email };
     // const filter = { _id: ObjectId(id) };
-    console.log(filter)
+    console.log(filter);
     const option = { upsert: true };
     const updateDoc = {
-      $set: emailSubscribe
+      $set: emailSubscribe,
     };
     const result = await Subscribe.updateOne(filter, updateDoc, option);
     res.send({
