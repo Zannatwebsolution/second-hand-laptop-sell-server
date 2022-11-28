@@ -23,6 +23,7 @@ const Orders = client.db("secondHandLaptop").collection("orders");
 const Blogs = client.db("secondHandLaptop").collection("blogs");
 const Wishlist = client.db("secondHandLaptop").collection("wishlist");
 const ReportedProduct = client.db("secondHandLaptop").collection("reportedProduct");
+const Subscribe = client.db("secondHandLaptop").collection("subscribe");
 
 async function run() {
   try {
@@ -576,6 +577,53 @@ app.get("/reportedProduct", async (req, res) => {
   try {
     const query = {};
     const result = await ReportedProduct.find(query).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Reported Product",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Data Load Fail",
+    });
+  }
+});
+
+// Create Subscribe Data
+app.put("/subscribe/:email", async (req, res) => {
+  try {
+    const emailSubscribe = req.body;
+    console.log(emailSubscribe)
+    const email = req.params.email;
+    const filter = { email: email };
+    // const filter = { _id: ObjectId(id) };
+    console.log(filter)
+    const option = { upsert: true };
+    const updateDoc = {
+      $set: emailSubscribe
+    };
+    const result = await Subscribe.updateOne(filter, updateDoc, option);
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully Subscribe",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: false,
+      message: "Subscribe fail",
+    });
+  }
+});
+
+// Get All Subscribe Data
+app.get("/subscribe", async (req, res) => {
+  try {
+    const query = {};
+    const result = await Subscribe.find(query).toArray();
     res.send({
       data: result,
       success: true,
