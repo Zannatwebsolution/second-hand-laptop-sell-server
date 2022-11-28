@@ -302,6 +302,45 @@ app.get("/products/:email", async (req, res) => {
     });
   }
 });
+// Get Product By Advertise
+app.get("/product-advertise", async (req, res) => {
+  try {
+    const filter = { advertise: "yes" };
+    const result = await Products.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Product data By advertise",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+// Get Product By Brand
+app.get("/product/:brand", async (req, res) => {
+  try {
+    const brand = req.params.brand;
+    const filter = { brand: brand };
+    console.log(filter)
+    const result = await Products.find(filter).toArray();
+    res.send({
+      data: result,
+      success: true,
+      message: "Successfully find the all Product data By Brand",
+    });
+  } catch (error) {
+    res.send({
+      data: error,
+      success: true,
+      message: "Data Load Fail",
+    });
+  }
+});
+
 
 // Get Product By Category Id
 app.get("/category/:id", async (req, res) => {
@@ -333,11 +372,11 @@ app.delete("/products/:id", verifyJwt, verifyAdmin, async (req, res) => {
 
 // Add New field by all product, If You Need Manually
 app.put("/product/", async (req, res) => {
-  const filter = { categoryName: "Laptop Stands" };
+  const filter = { brand: "D-Link" };
   const options = { upsert: true };
   const updateDoc = {
     $set: {
-      wishlist: "no",
+      brand_title: "D-Link Corporation is a Taiwanese multinational networking equipment manufacturing corporation headquartered in Taipei",
     },
   };
   const result = await Products.updateMany(filter, updateDoc, options);
@@ -397,7 +436,7 @@ app.get("/blog/:id", async (req, res) => {
 });
 
 // Create Order Data
-app.post("/orders", async (req, res) => {
+app.post("/orders", verifyJwt, async (req, res) => {
   try {
     const order = req.body;
     console.log(order);
@@ -417,7 +456,7 @@ app.post("/orders", async (req, res) => {
 });
 
 // Get All Order Data
-app.get("/orders", async (req, res) => {
+app.get("/orders", verifyJwt, async (req, res) => {
   try {
     const query = {};
     const result = await Orders.find(query).toArray();
@@ -436,7 +475,7 @@ app.get("/orders", async (req, res) => {
 });
 
 // Find Order Data By Email
-app.get("/orders/:email", async (req, res) => {
+app.get("/orders/:email", verifyJwt, async (req, res) => {
   try {
     const email = req.params.email;
     const filter = { email: email };
@@ -573,7 +612,7 @@ app.put("/reportedProduct/:id", verifyJwt, async (req, res) => {
 });
 
 // Get All Reported Data
-app.get("/reportedProduct", async (req, res) => {
+app.get("/reportedProduct", verifyJwt, verifyAdmin, async (req, res) => {
   try {
     const query = {};
     const result = await ReportedProduct.find(query).toArray();
@@ -620,7 +659,7 @@ app.put("/subscribe/:email", async (req, res) => {
 });
 
 // Get All Subscribe Data
-app.get("/subscribe", async (req, res) => {
+app.get("/subscribe", verifyJwt, verifyAdmin, async (req, res) => {
   try {
     const query = {};
     const result = await Subscribe.find(query).toArray();
